@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>周子AI - 短剧制作模块 Demo</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
+  background: #f5f5f5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.phone-frame {
+  width: 375px; height: 812px;
+  background: #fff; border-radius: 40px;
+  overflow: hidden; position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  display: flex; flex-direction: column;
+}
+
+/* Status Bar */
+.status-bar {
+  height: 44px; display: flex; align-items: center;
+  justify-content: space-between; padding: 0 24px;
+  background: #fff; flex-shrink: 0;
+}
+.status-bar .time { font-size: 15px; font-weight: 600; }
+.status-bar .icons { display: flex; gap: 5px; font-size: 12px; }
+
+/* Top Header */
+.top-header {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px; background: #fff; flex-shrink: 0;
+}
+.top-header .left-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, #f8d56e, #f0a030);
+  border-radius: 50%; display: flex;
+  align-items: center; justify-content: center; font-size: 16px;
+}
+.top-header .avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, #e8b87a, #d4935a);
+  border: 2px solid #fff; display: flex;
+  align-items: center; justify-content: center;
+  font-size: 12px; color: #fff; font-weight: 600;
+}
+.top-header .right-icons { display: flex; gap: 12px; }
+.top-header .right-icons span {
+  width: 28px; height: 28px; display: flex;
+  align-items: center; justify-content: center;
+  font-size: 18px; color: #333;
+}
+
+/* Chat Area */
+.chat-area {
+  flex: 1; overflow-y: auto; padding: 12px 16px;
+  background: #faf8f5; scroll-behavior: smooth;
+}
+
+/* Messages */
+.message { margin-bottom: 16px; animation: fadeInUp 0.4s ease; }
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.sender { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.sender-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, #e8b87a, #d4935a);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: #fff; font-weight: 600;
+}
+.sender-name { font-size: 13px; color: #999; }
+.bubble {
+  background: #fff; border-radius: 16px;
+  padding: 14px 16px; font-size: 15px;
+  line-height: 1.6; color: #333;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  max-width: 88%;
+}
+.voice-icon { color: #f0a030; margin-left: 4px; }
+
+/* Hot Topics */
+.hot-topics { margin-top: 8px; }
+.hot-topics .label {
+  font-size: 13px; color: #999;
+  display: flex; justify-content: space-between; margin-bottom: 8px;
+}
+.refresh { color: #f0a030; cursor: pointer; }
+.topic-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; background: #fff; border-radius: 12px;
+  margin-bottom: 6px; font-size: 14px; color: #333;
+  cursor: pointer; transition: all 0.2s; border: 1px solid #f0ede8;
+}
+.topic-item:hover, .topic-item:active {
+  background: #fef8ee; border-color: #f0a030;
+}
+.topic-item .arrow { color: #f0a030; font-size: 16px; }
+
+/* User Message */
+.user-msg {
+  display: flex; justify-content: flex-end;
+  margin-bottom: 16px; animation: fadeInUp 0.4s ease;
+}
+.user-msg .bubble {
+  background: linear-gradient(135deg, #f8e8c8, #f5ddb0);
+  color: #5a4420; border-radius: 16px 16px 4px 16px;
+}
+.user-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, #7ecbf5, #5ba8d9);
+  margin-left: 8px; display: flex;
+  align-items: center; justify-content: center;
+  font-size: 12px; color: #fff; flex-shrink: 0;
+}
+
+/* AI Response */
+.ai-response { animation: fadeInUp 0.4s ease; }
+.ai-response .bubble { border-radius: 16px 16px 16px 4px; }
+.status-dot {
+  display: inline-block; width: 6px; height: 6px;
+  background: #f0a030; border-radius: 50%;
+  margin-right: 6px; animation: pulse 1.5s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.task-label { font-weight: 600; color: #333; margin-bottom: 8px; }
+.task-content { font-size: 14px; line-height: 1.7; color: #555; }
+.action-btns { display: flex; gap: 8px; margin-top: 12px; }
+.action-btn {
+  padding: 6px 14px; border-radius: 20px;
+  font-size: 13px; cursor: pointer; transition: all 0.2s;
+}
+.action-btn.primary { background: #f0a030; color: #fff; border: none; }
+.action-btn.secondary { background: #fff; color: #f0a030; border: 1px solid #f0a030; }
+
+/* Template Gallery - smaller cards */
+.template-gallery {
+  display: flex; gap: 8px; overflow-x: auto;
+  padding: 4px 0 8px;
+  -webkit-overflow-scrolling: touch;
+}
+.template-gallery::-webkit-scrollbar { display: none; }
+.tpl-card {
+  flex-shrink: 0; width: 90px; height: 110px;
+  border-radius: 10px; overflow: hidden;
+  position: relative; cursor: pointer;
+  transition: transform 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.tpl-card:hover { transform: scale(1.04); }
+.tpl-card .tpl-cover {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 8px 6px; text-align: center;
+}
+.tpl-card .tpl-icon { font-size: 22px; margin-bottom: 4px; }
+.tpl-card .tpl-title {
+  font-size: 12px; font-weight: 700; color: #fff;
+  line-height: 1.2; text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+.tpl-card .tpl-desc {
+  font-size: 9px; color: rgba(255,255,255,0.85);
+  margin-top: 3px;
+  background: rgba(255,255,255,0.2);
+  padding: 1px 6px; border-radius: 8px;
+}
+.tpl-card.selected {
+  outline: 2.5px solid #4ecdc4;
+  outline-offset: 1px;
+}
+.tpl-card.selected::after {
+  content: '\2713'; position: absolute;
+  top: 4px; right: 4px; width: 16px; height: 16px;
+  background: #4ecdc4; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 9px; font-weight: 700;
+}
+
+/* Function Icons Bar - always visible, 4 main icons */
+.function-bar {
+  display: flex; justify-content: center; gap: 6px;
+  padding: 10px 16px 6px; background: #fff;
+  flex-shrink: 0; border-top: 1px solid #f0ede8;
+}
+.func-icon {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 4px; cursor: pointer; padding: 4px 10px;
+  border-radius: 12px; transition: all 0.3s; min-width: 60px;
+}
+.func-icon .icon-circle {
+  width: 42px; height: 42px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 19px; transition: all 0.3s;
+}
+.func-icon .icon-label {
+  font-size: 10px; color: #999; white-space: nowrap; transition: color 0.3s;
+}
+.func-icon.active .icon-label { color: #f0a030; font-weight: 700; font-size: 11px; }
+.func-icon.active .icon-circle {
+  box-shadow: 0 4px 14px rgba(240,160,48,0.45);
+  transform: translateY(-3px) scale(1.12);
+  border: 2.5px solid #f0a030;
+}
+
+.icon-video .icon-circle { background: #e8f4fd; color: #5ba8d9; }
+.icon-drama .icon-circle { background: #fef3e0; color: #f0a030; }
+.icon-music .icon-circle { background: #fde8e8; color: #e85d5d; }
+.icon-hot .icon-circle { background: #fff3e0; color: #ff9800; }
+.icon-more .icon-circle { background: #e8f5e9; color: #66bb6a; }
+
+/* Input Area - collapsed state */
+.input-area { padding: 8px 16px 24px; background: #fff; flex-shrink: 0; position: relative; }
+.input-wrapper {
+  display: flex; align-items: center; gap: 10px;
+  background: #f5f3ef; border-radius: 24px; padding: 10px 14px;
+  cursor: text;
+}
+.input-wrapper input {
+  flex: 1; border: none; background: none;
+  font-size: 14px; color: #333; outline: none;
+}
+.input-wrapper input::placeholder { color: #bbb; }
+.send-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, #f8d56e, #f0a030);
+  border: none; display: flex; align-items: center;
+  justify-content: center; font-size: 16px;
+  cursor: pointer; transition: transform 0.2s;
+}
+.send-btn:hover { transform: scale(1.1); }
+
+/* Background overlay when input is expanded */
+.input-overlay {
+  display: none;
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 50;
+  animation: fadeIn 0.25s ease;
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.input-overlay.show { display: block; }
+
+/* Expanded Input State */
+.input-area {
+  position: relative;
+  z-index: 60;
+}
+.input-area.expanded {
+  padding: 0 16px 24px;
+}
+.input-area.expanded .input-wrapper {
+  display: none;
+}
+.expanded-input {
+  display: none;
+  background: #fff;
+}
+.input-area.expanded .expanded-input {
+  display: flex;
+  flex-direction: column;
+}
+.expanded-input {
+  display: none;
+  background: #fff;
+  min-height: 340px;
+}
+.expanded-textarea {
+  width: 100%;
+  flex: 1;
+  border: none;
+  background: #fff;
+  padding: 12px 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #333;
+  resize: none;
+  outline: none;
+  font-family: inherit;
+}
+.expanded-textarea::placeholder { color: #bbb; }
+.expanded-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px solid #f0ede8;
+}
+.expanded-tools { display: flex; gap: 12px; }
+.expanded-tools span {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: #f5f3ef; display: flex;
+  align-items: center; justify-content: center;
+  font-size: 16px; cursor: pointer; color: #666;
+}
+.expanded-send {
+  padding: 8px 24px; border-radius: 20px;
+  background: linear-gradient(135deg, #f8d56e, #f0a030);
+  border: none; color: #fff; font-size: 14px;
+  font-weight: 600; cursor: pointer;
+  transition: transform 0.2s;
+}
+.expanded-send:hover { transform: scale(1.05); }
+
+/* Avatar Selector in expanded input */
+.avatar-selector {
+  padding: 10px 0 8px;
+  border-bottom: 1px solid #f0ede8;
+  margin-bottom: 4px;
+}
+.avatar-selector-label {
+  font-size: 13px; color: #999; margin-bottom: 8px;
+}
+.avatar-selector-list {
+  display: flex; gap: 14px; overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+.avatar-selector-list::-webkit-scrollbar { display: none; }
+.avatar-option {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 4px; cursor: pointer; position: relative;
+  min-width: 56px; transition: transform 0.2s;
+}
+.avatar-option:hover { transform: scale(1.05); }
+.avatar-thumb {
+  width: 48px; height: 48px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  border: 2px solid transparent;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.avatar-option.selected .avatar-thumb {
+  border-color: #4ecdc4;
+  box-shadow: 0 2px 8px rgba(78,205,196,0.3);
+}
+.avatar-name {
+  font-size: 10px; color: #666; white-space: nowrap;
+}
+.avatar-option.selected .avatar-name {
+  color: #4ecdc4; font-weight: 600;
+}
+.avatar-check {
+  position: absolute; top: -2px; right: -2px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #4ecdc4; color: #fff;
+  font-size: 9px; font-weight: 700;
+  display: none; align-items: center; justify-content: center;
+}
+.avatar-option.selected .avatar-check { display: flex; }
+
+/* Music Advanced Options */
+.music-options {
+  padding: 10px 0 8px;
+  border-bottom: 1px solid #f0ede8;
+  margin-bottom: 4px;
+}
+.music-options-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.music-options-header .label { font-size: 13px; color: #999; }
+.music-options-header .toggle-btn {
+  font-size: 12px; color: #f0a030; cursor: pointer;
+  background: none; border: none; font-family: inherit;
+}
+.music-params { display: flex; flex-direction: column; gap: 10px; }
+.music-params.collapsed { display: none; }
+.param-row {
+  display: flex; align-items: center; gap: 10px;
+}
+.param-label { font-size: 12px; color: #666; min-width: 45px; }
+.param-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.param-tag {
+  padding: 4px 12px; border-radius: 14px;
+  font-size: 11px; cursor: pointer;
+  border: 1px solid #e0dcd6; color: #666;
+  background: #fff; transition: all 0.2s;
+}
+.param-tag.active {
+  background: #f0a030; color: #fff;
+  border-color: #f0a030;
+}
+.param-tag:hover { border-color: #f0a030; }
+.music-quick-tags {
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.music-quick-tag {
+  padding: 5px 12px; border-radius: 16px;
+  font-size: 12px; cursor: pointer;
+  background: #fef3e0; color: #d4890a;
+  border: none; transition: all 0.2s;
+}
+.music-quick-tag.active, .music-quick-tag:hover {
+  background: #f0a030; color: #fff;
+}
+
+/* Function bar also above overlay */
+.function-bar { position: relative; z-index: 60; }
+
+/* Hide tab bar when input is expanded */
+.tab-bar { position: relative; z-index: 40; transition: opacity 0.2s; }
+.tab-bar.hidden-by-input { display: none; }
+
+/* Bottom Tab Bar */
+.tab-bar {
+  display: flex; justify-content: space-around;
+  padding: 8px 0 20px; background: #fff;
+  border-top: 1px solid #f0ede8; flex-shrink: 0;
+}
+.tab-item {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 2px; cursor: pointer; font-size: 20px; color: #ccc;
+}
+.tab-item .tab-label { font-size: 10px; color: #999; }
+.tab-item.active { color: #f0a030; }
+.tab-item.active .tab-label { color: #f0a030; font-weight: 600; }
+
+.hidden { display: none; }
+
+/* Typing indicator */
+.typing-indicator { display: inline-flex; gap: 4px; padding: 4px 0; }
+.typing-indicator span {
+  width: 6px; height: 6px; background: #f0a030;
+  border-radius: 50%; animation: typing 1.2s infinite;
+}
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typing {
+  0%,60%,100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+
+/* Toast */
+.toast {
+  position: absolute; top: 60px; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.75); color: #fff;
+  padding: 8px 20px; border-radius: 20px;
+  font-size: 13px; z-index: 100;
+  opacity: 0; transition: opacity 0.3s; pointer-events: none;
+}
+.toast.show { opacity: 1; }
+
+/* Section label */
+.section-label {
+  font-size: 13px; color: #999;
+  display: flex; justify-content: space-between;
+  margin-bottom: 8px; margin-top: 14px;
+}
+</style>
+</head>
+<body>
+
+<div class="phone-frame" id="app">
+  <div class="toast" id="toast"></div>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="time">9:41</span>
+    <div class="icons"><span>&#9679;&#9679;&#9679;&#9679;</span> <span>&#9632;</span></div>
+  </div>
+
+  <!-- Top Header -->
+  <div class="top-header">
+    <div class="left-icon">&#128264;</div>
+    <div class="avatar">周</div>
+    <div class="right-icons"><span>&#8230;</span><span>&#9673;</span></div>
+  </div>
+
+  <!-- Chat Area -->
+  <div class="chat-area" id="chatArea">
+
+    <!-- Video Creation Mode -->
+    <div id="videoMode">
+      <div class="message">
+        <div class="sender">
+          <div class="sender-avatar">周</div>
+          <span class="sender-name">周子</span>
+        </div>
+        <div class="bubble">
+          今天想好做什么视频了吗？我给你精选了几个热点话题，如果你喜欢的话可以立即帮你生成爆款文案，辅助你创作出你的作品
+          <span class="voice-icon">&#128266;</span>
+        </div>
+        <div class="hot-topics">
+          <div class="label">
+            <span>热门话题：</span>
+            <span class="refresh" onclick="showToast('已刷新话题')">换一批</span>
+          </div>
+          <div class="topic-item" onclick="selectTopic(this, '高考语文作文题目')">高考语文作文题目 <span class="arrow">&rarr;</span></div>
+          <div class="topic-item" onclick="selectTopic(this, '家属回应韦东奕身体状况')">家属回应韦东奕身体状况 <span class="arrow">&rarr;</span></div>
+          <div class="topic-item" onclick="selectTopic(this, '普通家庭最大的通病是把托举顺序搞...')">普通家庭最大的通病是把托举顺序搞... <span class="arrow">&rarr;</span></div>
+          <div class="topic-item" onclick="selectTopic(this, '单依纯李白 高考禁曲')">单依纯李白 高考禁曲 <span class="arrow">&rarr;</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Drama Mode -->
+    <div id="dramaMode" class="hidden">
+      <div class="message">
+        <div class="sender">
+          <div class="sender-avatar">周</div>
+          <span class="sender-name">周子</span>
+        </div>
+        <div class="bubble">
+          家人们好！穷人学技术，富人学思维。今天咱们不讲课，咱们拍短剧！用故事的力量，让更多人打开财商思维。从我的书里选一个模板开始，或者直接告诉我你想拍什么，我来帮你搞定！
+          <span class="voice-icon">&#128266;</span>
+        </div>
+
+        <div class="section-label">
+          <span>经典书籍剧本模板：</span>
+          <span class="refresh" onclick="showToast('已刷新')">换一批</span>
+        </div>
+        <div class="template-gallery">
+          <div class="tpl-card" onclick="selectTemplate(this, '财道')">
+            <div class="tpl-cover" style="background:linear-gradient(135deg,#1a3a5c,#2980b9);">
+              <span class="tpl-icon">&#128176;</span>
+              <div class="tpl-title">财道</div>
+              <div class="tpl-desc">3分钟 | 觉醒</div>
+            </div>
+          </div>
+          <div class="tpl-card" onclick="selectTemplate(this, '经营之道')">
+            <div class="tpl-cover" style="background:linear-gradient(135deg,#6c3483,#c0392b);">
+              <span class="tpl-icon">&#128200;</span>
+              <div class="tpl-title">经营之道</div>
+              <div class="tpl-desc">4分钟 | 经营</div>
+            </div>
+          </div>
+          <div class="tpl-card" onclick="selectTemplate(this, '销售之神')">
+            <div class="tpl-cover" style="background:linear-gradient(135deg,#c0392b,#e74c3c);">
+              <span class="tpl-icon">&#128170;</span>
+              <div class="tpl-title">销售之神</div>
+              <div class="tpl-desc">3分钟 | 销售</div>
+            </div>
+          </div>
+          <div class="tpl-card" onclick="selectTemplate(this, '演说之道')">
+            <div class="tpl-cover" style="background:linear-gradient(135deg,#1e8449,#27ae60);">
+              <span class="tpl-icon">&#127908;</span>
+              <div class="tpl-title">演说之道</div>
+              <div class="tpl-desc">3分钟 | 表达</div>
+            </div>
+          </div>
+          <div class="tpl-card" onclick="selectTemplate(this, '因梦而生')">
+            <div class="tpl-cover" style="background:linear-gradient(135deg,#d4ac0d,#f39c12);">
+              <span class="tpl-icon">&#127775;</span>
+              <div class="tpl-title">因梦而生</div>
+              <div class="tpl-desc">4分钟 | 梦想</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hot-topics" style="margin-top: 4px;">
+          <div class="label"><span>财商短剧热门主题：</span></div>
+          <div class="topic-item" onclick="selectDramaTopic(this, '帮我把《财道》改编成一个理财觉醒的短剧')">
+            &#128214; 《财道》理财觉醒篇 <span class="arrow">&rarr;</span>
+          </div>
+          <div class="topic-item" onclick="selectDramaTopic(this, '帮我拍一个普通人财商觉醒的短剧')">
+            &#128161; 普通人财商觉醒故事 <span class="arrow">&rarr;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Music Mode -->
+    <div id="musicMode" class="hidden">
+      <div class="message">
+        <div class="sender">
+          <div class="sender-avatar">周</div>
+          <span class="sender-name">周子</span>
+        </div>
+        <div class="bubble">
+          家人们！想用AI创作一首属于你的歌吗？告诉我你想要什么风格、什么情绪，我来帮你搞定！也可以直接选一个热门曲风开始
+          <span class="voice-icon">&#128266;</span>
+        </div>
+
+        <div class="section-label">
+          <span>热门曲风：</span>
+          <span class="refresh" onclick="showToast('已刷新')">换一批</span>
+        </div>
+        <div class="template-gallery">
+          <div class="tpl-card" onclick="selectMusicStyle(this, '流行抒情')">
+            <div class="tpl-cover" style="background:linear-gradient(135deg,#667eea,#764ba2);">
+              <span class="tpl-icon">&#127925;</span>
+              <div class="tpl-title">流行抒情</div>
+              <div class="tpl-desc">温暖 | 治愈</div>
+            </div>
+          </div>
+          <div class="tpl-card" onclick="selectMusicStyle(this, '说唱Rap')">
+            <div class="tpl-cover" style="background:linear-gradient(135deg,#f7971e,#ffd200);">
+              <span class="tpl-icon">&#127908;</span>
+              <div class="tpl-title">说唱Rap</div>
+              <div class="tpl-desc">节奏 | 态度</div>
+            </div>
+          </div>
+          <div class="tpl-card" onclick="selectMusicStyle(this, '古风国潮')">
+            <div class="tpl-cover" style="background:linear-gradient(135deg,#c0392b,#e74c3c);">
+              <span class="tpl-icon">&#127931;</span>
+              <div class="tpl-title">古风国潮</div>
+              <div class="tpl-desc">典雅 | 意境</div>
+            </div>
+          </div>
+          <div class="tpl-card" onclick="selectMusicStyle(this, '电子舞曲')">
+            <div class="tpl-cover" style="background:linear-gradient(135deg,#00b4db,#0083b0);">
+              <span class="tpl-icon">&#127911;</span>
+              <div class="tpl-title">电子舞曲</div>
+              <div class="tpl-desc">活力 | 动感</div>
+            </div>
+          </div>
+          <div class="tpl-card" onclick="selectMusicStyle(this, '民谣清新')">
+            <div class="tpl-cover" style="background:linear-gradient(135deg,#56ab2f,#a8e063);">
+              <span class="tpl-icon">&#127928;</span>
+              <div class="tpl-title">民谣清新</div>
+              <div class="tpl-desc">自然 | 随性</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hot-topics" style="margin-top: 4px;">
+          <div class="label"><span>AI 作曲灵感：</span></div>
+          <div class="topic-item" onclick="selectMusicTopic(this, '帮我写一首关于财务自由的励志歌曲')">
+            &#127925; 财务自由励志歌 <span class="arrow">&rarr;</span>
+          </div>
+          <div class="topic-item" onclick="selectMusicTopic(this, '帮我写一首关于创业路上的说唱')">
+            &#127908; 创业之路说唱 <span class="arrow">&rarr;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="dynamicMessages"></div>
+  </div>
+
+  <!-- Function Icons Bar (always visible, highlight active) -->
+  <div class="function-bar" id="funcBar">
+    <div class="func-icon icon-video active" onclick="switchMode('video')" id="btnVideo">
+      <div class="icon-circle">&#127909;</div>
+      <span class="icon-label">视频创作</span>
+    </div>
+    <div class="func-icon icon-drama" onclick="switchMode('drama')" id="btnDrama">
+      <div class="icon-circle">&#127916;</div>
+      <span class="icon-label">短剧制作</span>
+    </div>
+    <div class="func-icon icon-music" onclick="switchMode('music')" id="btnMusic">
+      <div class="icon-circle">&#127925;</div>
+      <span class="icon-label">AI音乐</span>
+    </div>
+    <div class="func-icon icon-hot" onclick="showToast('爆款复刻模块')">
+      <div class="icon-circle">&#128293;</div>
+      <span class="icon-label">爆款复刻</span>
+    </div>
+    <div class="func-icon icon-more" onclick="showToast('更多功能')">
+      <div class="icon-circle">&#10010;</div>
+      <span class="icon-label">更多</span>
+    </div>
+  </div>
+
+  <!-- Background Overlay -->
+  <div class="input-overlay" id="inputOverlay" onclick="collapseInput()"></div>
+
+  <!-- Input Area -->
+  <div class="input-area" id="inputArea">
+    <!-- Collapsed state -->
+    <div class="input-wrapper" onclick="expandInput()">
+      <input type="text" id="inputField" placeholder="静心思考，诉诸文字..." readonly style="cursor:text;">
+      <button class="send-btn">&#128266;</button>
+    </div>
+    <!-- Expanded state -->
+    <div class="expanded-input">
+      <!-- Digital Human Selector (only visible in video mode) -->
+      <div class="avatar-selector" id="avatarSelector">
+        <div class="avatar-selector-label">选择数字人：</div>
+        <div class="avatar-selector-list">
+          <div class="avatar-option selected" onclick="selectAvatar(this, '周文强')">
+            <div class="avatar-thumb avatar-photo" style="background:linear-gradient(135deg,#e8b87a,#d4935a);">
+              <span style="font-size:16px;color:#fff;font-weight:700;">周</span>
+            </div>
+            <span class="avatar-name">周文强</span>
+            <div class="avatar-check">&#10003;</div>
+          </div>
+          <div class="avatar-option" onclick="selectAvatar(this, '商务男')">
+            <div class="avatar-thumb avatar-photo" style="background:linear-gradient(135deg,#34495e,#2c3e50);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="rgba(255,255,255,0.85)"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" fill="rgba(255,255,255,0.85)"/><path d="M9 13l3-2 3 2" stroke="rgba(255,255,255,0.5)" stroke-width="1" fill="none"/></svg>
+            </div>
+            <span class="avatar-name">商务男</span>
+            <div class="avatar-check">&#10003;</div>
+          </div>
+          <div class="avatar-option" onclick="selectAvatar(this, '职场女')">
+            <div class="avatar-thumb avatar-photo" style="background:linear-gradient(135deg,#e85d75,#c0392b);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="rgba(255,255,255,0.85)"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" fill="rgba(255,255,255,0.85)"/><path d="M8 6c1-2 3-3 4-3s3 1 4 3" stroke="rgba(255,255,255,0.5)" stroke-width="1" fill="none"/></svg>
+            </div>
+            <span class="avatar-name">职场女</span>
+            <div class="avatar-check">&#10003;</div>
+          </div>
+          <div class="avatar-option" onclick="selectAvatar(this, '知性女')">
+            <div class="avatar-thumb avatar-photo" style="background:linear-gradient(135deg,#9b59b6,#8e44ad);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="rgba(255,255,255,0.85)"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" fill="rgba(255,255,255,0.85)"/><rect x="9" y="5" width="6" height="1" rx="0.5" fill="rgba(255,255,255,0.4)"/></svg>
+            </div>
+            <span class="avatar-name">知性女</span>
+            <div class="avatar-check">&#10003;</div>
+          </div>
+          <div class="avatar-option" onclick="selectAvatar(this, '年轻男')">
+            <div class="avatar-thumb avatar-photo" style="background:linear-gradient(135deg,#27ae60,#2ecc71);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="rgba(255,255,255,0.85)"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" fill="rgba(255,255,255,0.85)"/></svg>
+            </div>
+            <span class="avatar-name">年轻男</span>
+            <div class="avatar-check">&#10003;</div>
+          </div>
+        </div>
+      </div>
+      <!-- Music Options (only visible in music mode) -->
+      <div class="music-options" id="musicOptions" style="display:none;">
+        <div class="music-options-header">
+          <span class="label">快速选择曲风：</span>
+        </div>
+        <div class="music-quick-tags">
+          <span class="music-quick-tag active" onclick="selectQuickTag(this)">流行</span>
+          <span class="music-quick-tag" onclick="selectQuickTag(this)">说唱</span>
+          <span class="music-quick-tag" onclick="selectQuickTag(this)">古风</span>
+          <span class="music-quick-tag" onclick="selectQuickTag(this)">民谣</span>
+          <span class="music-quick-tag" onclick="selectQuickTag(this)">电子</span>
+          <span class="music-quick-tag" onclick="selectQuickTag(this)">摇滚</span>
+        </div>
+      </div>
+      <textarea class="expanded-textarea" id="expandedTextarea" placeholder="请输入你的视频主题和想法。例如：帮我制作一个关于家庭关系的短视频"></textarea>
+      <div class="expanded-bottom">
+        <div class="expanded-tools">
+          <span title="语音输入" onclick="showToast('语音输入')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </span>
+          <span title="上传附件" onclick="showToast('上传附件')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          </span>
+        </div>
+        <button class="expanded-send" onclick="sendFromExpanded()">发送</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Tab Bar -->
+  <div class="tab-bar">
+    <div class="tab-item" onclick="showToast('对话')"><span>&#128172;</span><span class="tab-label">对话</span></div>
+    <div class="tab-item" onclick="showToast('学习')"><span>&#128197;</span><span class="tab-label">学习</span></div>
+    <div class="tab-item active"><span>&#10133;</span><span class="tab-label">创作</span></div>
+    <div class="tab-item" onclick="showToast('我的')"><span>&#128100;</span><span class="tab-label">我的</span></div>
+  </div>
+</div>
+
+<script>
+let currentMode = 'video';
+
+function switchMode(mode) {
+  if (currentMode === mode) return;
+  currentMode = mode;
+  document.getElementById('dynamicMessages').innerHTML = '';
+
+  const videoMode = document.getElementById('videoMode');
+  const dramaMode = document.getElementById('dramaMode');
+  const musicMode = document.getElementById('musicMode');
+  const btnVideo = document.getElementById('btnVideo');
+  const btnDrama = document.getElementById('btnDrama');
+  const btnMusic = document.getElementById('btnMusic');
+  const inputField = document.getElementById('inputField');
+  const avatarSelector = document.getElementById('avatarSelector');
+  const musicOptions = document.getElementById('musicOptions');
+
+  // Hide all modes
+  videoMode.classList.add('hidden');
+  dramaMode.classList.add('hidden');
+  musicMode.classList.add('hidden');
+  avatarSelector.style.display = 'none';
+  musicOptions.style.display = 'none';
+
+  // Reset all func icons
+  document.querySelectorAll('.func-icon').forEach(f => f.classList.remove('active'));
+
+  // Check if input is currently expanded
+  const isExpanded = document.getElementById('inputArea').classList.contains('expanded');
+
+  if (mode === 'drama') {
+    dramaMode.classList.remove('hidden');
+    btnDrama.classList.add('active');
+    inputField.placeholder = '描述你想要的财商短剧主题...';
+    if (isExpanded) {
+      document.getElementById('expandedTextarea').placeholder = '请输入你想要的财商短剧主题和想法...';
+    }
+    showToast('已切换到短剧制作模式');
+  } else if (mode === 'music') {
+    musicMode.classList.remove('hidden');
+    btnMusic.classList.add('active');
+    inputField.placeholder = '描述你想要的歌曲...';
+    if (isExpanded) {
+      musicOptions.style.display = 'block';
+      document.getElementById('expandedTextarea').placeholder = '描述你想要的歌曲，例如：一首关于追逐梦想的励志歌...';
+    }
+    showToast('已切换到AI音乐模式');
+  } else {
+    videoMode.classList.remove('hidden');
+    btnVideo.classList.add('active');
+    inputField.placeholder = '静心思考，诉诸文字...';
+    if (isExpanded) {
+      avatarSelector.style.display = 'block';
+      document.getElementById('expandedTextarea').placeholder = '请输入你的视频主题和想法。例如：帮我制作一个关于家庭关系的短视频';
+    }
+    showToast('已切换到视频创作模式');
+  }
+  // Scroll chat area to top on mode switch
+  document.getElementById('chatArea').scrollTop = 0;
+}
+
+function selectTopic(el, topic) {
+  document.querySelectorAll('#videoMode .topic-item').forEach(t => t.style.background = '#fff');
+  el.style.background = '#fef8ee';
+  addUserMessage(topic);
+  setTimeout(() => addAIMessage('好的，接下来我将为你生成你想要的爆款文案。'), 800);
+}
+
+function selectDramaTopic(el, topic) {
+  document.querySelectorAll('#dramaMode .topic-item').forEach(t => t.style.background = '#fff');
+  el.style.background = '#fef8ee';
+  addUserMessage(topic);
+  setTimeout(() => showDramaTaskResponse(topic), 800);
+}
+
+function selectTemplate(el, name) {
+  document.querySelectorAll('#dramaMode .tpl-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  showToast('已选择：《' + name + '》');
+  setTimeout(() => {
+    addUserMessage('使用《' + name + '》制作财商短剧');
+    setTimeout(() => {
+      const html = `
+        <div class="ai-response" style="margin-bottom:16px">
+          <div class="sender"><div class="sender-avatar">周</div><span class="sender-name">周子</span></div>
+          <div class="bubble">
+            <div class="task-label"><span class="status-dot"></span>基于《${name}》创作中</div>
+            <div class="task-content">
+              已加载周文强老师《${name}》核心内容，正在智能改编为短剧剧本...<br><br>
+              &#9989; 提取书籍核心理念<br>
+              &#9989; 设计故事化场景<br>
+              <span class="status-dot"></span> 生成3-4分钟短剧剧本中...<br><br>
+              <div class="typing-indicator"><span></span><span></span><span></span></div>
+            </div>
+            <div class="action-btns" style="margin-top:12px">
+              <button class="action-btn primary" onclick="showDramaResult('${name}')">查看剧本</button>
+              <button class="action-btn secondary" onclick="showToast('调整风格')">调整风格</button>
+            </div>
+          </div>
+        </div>`;
+      document.getElementById('dynamicMessages').insertAdjacentHTML('beforeend', html);
+      scrollToBottom();
+    }, 800);
+  }, 300);
+}
+
+function showDramaTaskResponse(topic) {
+  const html = `
+    <div class="ai-response" style="margin-bottom:16px">
+      <div class="sender"><div class="sender-avatar">周</div><span class="sender-name">周子</span></div>
+      <div class="bubble">
+        <div class="task-label"><span class="status-dot"></span>收到短剧创作任务</div>
+        <div class="task-content">
+          正在为你生成财商短剧剧本...<br><br>
+          <strong>剧本类型：</strong>财商教育短剧<br>
+          <strong>内容调性：</strong>周子AI · 财商觉醒<br>
+          <strong>预计时长：</strong>3-4分钟<br>
+          <strong>目标受众：</strong>理财小白 / 年轻上班族<br><br>
+          <div class="typing-indicator"><span></span><span></span><span></span></div>
+        </div>
+        <div class="action-btns" style="margin-top:12px">
+          <button class="action-btn primary" onclick="showDramaResult('财商觉醒')">查看剧本</button>
+          <button class="action-btn secondary" onclick="showToast('修改需求')">修改需求</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('dynamicMessages').insertAdjacentHTML('beforeend', html);
+  scrollToBottom();
+}
+
+function showDramaResult(title) {
+  const scripts = {
+    '财道': {
+      s1: '月光族小李每月工资花光，焦虑地看着信用卡账单...',
+      s2: '偶然刷到周文强老师的视频："穷人和富人最大的区别，不是钱多钱少，而是思维方式！"',
+      s3: '"原来赚钱只是结果，思维才是根因！"小李开始记账、学习投资...',
+      s4: '六个月后，小李不仅还清债务，还开始了第一笔基金定投...'
+    },
+    '经营之道': {
+      s1: '创业者张明的奶茶店连续亏损三个月，面临关门...',
+      s2: '合伙人推荐了《经营之道》："生意的本质不是卖产品，是经营人心！"',
+      s3: '"客户不是上帝，客户是朋友！"张明重新定义了服务理念...',
+      s4: '三个月后，小店成为网红打卡点，月流水翻了五倍...'
+    },
+    '销售之神': {
+      s1: '新人销售小王，连续30天零成交，自信心跌到谷底...',
+      s2: '主管送了一本《销售之神》："销售的最高境界是不销而销！"',
+      s3: '"先交朋友，再谈生意"——小王改变了话术和心态...',
+      s4: '第二个月，小王成为销冠，客户主动介绍新客户...'
+    },
+    '演说之道': {
+      s1: '内向的林雪在公司会议上紧张到说不出话，错失晋升机会...',
+      s2: '她开始学习《演说之道》："演说不是表演，是真诚的力量传递！"',
+      s3: '"用故事打动人，用真情感染人"——林雪开始每天练习三分钟演讲...',
+      s4: '年终大会上，林雪的演讲获得全场起立鼓掌，成功晋升...'
+    },
+    '因梦而生': {
+      s1: '快递员大强每天送300个包裹，梦想却是开一家自己的公司...',
+      s2: '一次偶然机会听到周文强的演讲："你的梦想有多大，你的世界就有多大！"',
+      s3: '大强开始利用送快递的间隙学习电商知识，积累人脉...',
+      s4: '两年后，大强成立了自己的物流公司，实现了曾经的梦想...'
+    }
+  };
+
+  const s = scripts[title] || scripts['财道'];
+
+  const html = `
+    <div class="ai-response" style="margin-bottom:16px">
+      <div class="sender"><div class="sender-avatar">周</div><span class="sender-name">周子</span></div>
+      <div class="bubble">
+        <div class="task-label">&#127916; 剧本已就绪 ——「${title}」</div>
+        <div class="task-content">
+          <strong>第一幕</strong> - 困境（30秒）<br>
+          ${s.s1}<br><br>
+          <strong>第二幕</strong> - 转折（45秒）<br>
+          ${s.s2}<br><br>
+          <strong>第三幕</strong> - 觉醒（60秒）<br>
+          ${s.s3}<br><br>
+          <strong>第四幕</strong> - 蜕变（45秒）<br>
+          ${s.s4}
+        </div>
+        <div class="action-btns" style="margin-top:12px">
+          <button class="action-btn primary" onclick="showToast('开始生成视频，预计2-3分钟...')">&#127909; 一键生成视频</button>
+          <button class="action-btn secondary" onclick="showToast('进入剧本编辑器')">&#9999; 编辑剧本</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('dynamicMessages').insertAdjacentHTML('beforeend', html);
+  scrollToBottom();
+}
+
+function selectMusicStyle(el, style) {
+  document.querySelectorAll('#musicMode .tpl-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  showToast('已选择：' + style);
+  setTimeout(() => {
+    addUserMessage('用「' + style + '」风格创作一首歌');
+    setTimeout(() => showMusicResponse(style), 800);
+  }, 300);
+}
+
+function selectMusicTopic(el, topic) {
+  document.querySelectorAll('#musicMode .topic-item').forEach(t => t.style.background = '#fff');
+  el.style.background = '#fef8ee';
+  addUserMessage(topic);
+  setTimeout(() => showMusicResponse(topic), 800);
+}
+
+function showMusicResponse(input) {
+  const html = `
+    <div class="ai-response" style="margin-bottom:16px">
+      <div class="sender"><div class="sender-avatar">周</div><span class="sender-name">周子</span></div>
+      <div class="bubble">
+        <div class="task-label"><span class="status-dot"></span>AI 作曲中</div>
+        <div class="task-content">
+          <strong>工作流进度：</strong><br><br>
+          &#9989; 1. 意图解析 — 提取情绪、曲风、场景<br>
+          &#9989; 2. 风格设计 — BPM、调式、乐器编曲<br>
+          <span class="status-dot"></span> 3. 歌词生成 — 创作中文歌词...<br>
+          &#9744; 4. Prompt工程 — 转成API指令<br>
+          &#9744; 5. 音乐生成 — 调用MiniMax生成音频<br>
+          &#9744; 6. 质量评估 — 检查时长和质量<br><br>
+          <div class="typing-indicator"><span></span><span></span><span></span></div>
+          <div style="font-size:12px;color:#999;margin-top:8px;">预计需要2-3分钟，请稍候...</div>
+        </div>
+        <div class="action-btns" style="margin-top:12px">
+          <button class="action-btn primary" onclick="showMusicResult()">&#127925; 试听歌曲</button>
+          <button class="action-btn secondary" onclick="showToast('重新生成')">&#128260; 重新生成</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('dynamicMessages').insertAdjacentHTML('beforeend', html);
+  scrollToBottom();
+}
+
+function showMusicResult() {
+  const html = `
+    <div class="ai-response" style="margin-bottom:16px">
+      <div class="sender"><div class="sender-avatar">周</div><span class="sender-name">周子</span></div>
+      <div class="bubble">
+        <div class="task-label">&#127925; 歌曲已生成</div>
+        <div style="background:#faf8f5;border-radius:12px;padding:12px;margin:8px 0;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;">&#9654;</div>
+            <div>
+              <div style="font-size:14px;font-weight:600;color:#333;">财富觉醒之歌</div>
+              <div style="font-size:11px;color:#999;">流行 · 3:24 · AI生成</div>
+            </div>
+          </div>
+          <div style="height:4px;background:#e0dcd6;border-radius:2px;overflow:hidden;">
+            <div style="width:35%;height:100%;background:linear-gradient(90deg,#f0a030,#f8d56e);border-radius:2px;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:10px;color:#bbb;">
+            <span>1:12</span><span>3:24</span>
+          </div>
+        </div>
+        <div class="action-btns" style="margin-top:8px">
+          <button class="action-btn primary" onclick="showToast('已保存到我的音乐')">&#128190; 保存</button>
+          <button class="action-btn secondary" onclick="showToast('下载MP3')">&#11015; 下载</button>
+          <button class="action-btn secondary" onclick="showToast('用于视频配乐')">&#127909; 用于视频</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('dynamicMessages').insertAdjacentHTML('beforeend', html);
+  scrollToBottom();
+}
+
+function toggleMusicAdvanced() {
+  const params = document.getElementById('musicAdvancedParams');
+  const btn = document.getElementById('toggleAdvanced');
+  if (params.classList.contains('collapsed')) {
+    params.classList.remove('collapsed');
+    btn.textContent = '收起选项 ▴';
+  } else {
+    params.classList.add('collapsed');
+    btn.textContent = '高级选项 ▾';
+  }
+}
+
+function selectQuickTag(el) {
+  el.parentElement.querySelectorAll('.music-quick-tag').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function selectParam(el) {
+  el.parentElement.querySelectorAll('.param-tag').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function selectAvatar(el, name) {
+  document.querySelectorAll('.avatar-option').forEach(a => a.classList.remove('selected'));
+  el.classList.add('selected');
+  showToast('已选择：' + name);
+}
+
+function expandInput() {
+  const inputArea = document.getElementById('inputArea');
+  const overlay = document.getElementById('inputOverlay');
+  const textarea = document.getElementById('expandedTextarea');
+  const tabBar = document.querySelector('.tab-bar');
+  const avatarSelector = document.getElementById('avatarSelector');
+  const musicOptions = document.getElementById('musicOptions');
+  inputArea.classList.add('expanded');
+  overlay.classList.add('show');
+  tabBar.classList.add('hidden-by-input');
+
+  // Hide all selectors first
+  avatarSelector.style.display = 'none';
+  musicOptions.style.display = 'none';
+
+  if (currentMode === 'drama') {
+    textarea.placeholder = '请输入你想要的财商短剧主题和想法...';
+  } else if (currentMode === 'music') {
+    textarea.placeholder = '描述你想要的歌曲，例如：一首关于追逐梦想的励志歌...';
+    musicOptions.style.display = 'block';
+  } else {
+    textarea.placeholder = '请输入你的视频主题和想法。例如：帮我制作一个关于家庭关系的短视频';
+    avatarSelector.style.display = 'block';
+  }
+  setTimeout(() => textarea.focus(), 100);
+}
+
+function collapseInput() {
+  const inputArea = document.getElementById('inputArea');
+  const overlay = document.getElementById('inputOverlay');
+  const tabBar = document.querySelector('.tab-bar');
+  inputArea.classList.remove('expanded');
+  overlay.classList.remove('show');
+  tabBar.classList.remove('hidden-by-input');
+}
+
+function sendFromExpanded() {
+  const textarea = document.getElementById('expandedTextarea');
+  const text = textarea.value.trim();
+  if (!text) return;
+  textarea.value = '';
+  collapseInput();
+  addUserMessage(text);
+  setTimeout(() => {
+    if (currentMode === 'drama') {
+      showDramaTaskResponse(text);
+    } else if (currentMode === 'music') {
+      showMusicResponse(text);
+    } else {
+      addAIMessage('好的，接下来我将为你生成你想要的爆款文案。');
+    }
+    scrollToBottom();
+  }, 800);
+}
+
+function sendMessage() {
+  const input = document.getElementById('inputField');
+  const text = input.value.trim();
+  if (!text) return;
+  addUserMessage(text);
+  input.value = '';
+  setTimeout(() => {
+    if (currentMode === 'drama') {
+      showDramaTaskResponse(text);
+    } else if (currentMode === 'music') {
+      showMusicResponse(text);
+    } else {
+      addAIMessage('好的，接下来我将为你生成你想要的爆款文案。');
+    }
+    scrollToBottom();
+  }, 800);
+}
+
+function addUserMessage(text) {
+  const html = `<div class="user-msg"><div class="bubble">${text}</div><div class="user-avatar">&#128100;</div></div>`;
+  document.getElementById('dynamicMessages').insertAdjacentHTML('beforeend', html);
+  scrollToBottom();
+}
+
+function addAIMessage(text) {
+  const html = `<div class="message"><div class="sender"><div class="sender-avatar">周</div><span class="sender-name">周子</span></div><div class="bubble">${text} <span class="voice-icon">&#128266;</span></div></div>`;
+  document.getElementById('dynamicMessages').insertAdjacentHTML('beforeend', html);
+  scrollToBottom();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1500);
+}
+
+function scrollToBottom() {
+  const c = document.getElementById('chatArea');
+  setTimeout(() => { c.scrollTop = c.scrollHeight; }, 100);
+}
+</script>
+</body>
+</html>
